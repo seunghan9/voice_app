@@ -1,4 +1,7 @@
+import 'dart:async';
 import 'dart:io';
+import 'dart:math' as Math;
+import 'package:flutter_embed_unity/flutter_embed_unity.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
@@ -16,6 +19,10 @@ class AudioService {
   bool _isRecording = false;
   bool _isPaused = false;
 
+  // 진폭 스트림을 위한 컨트롤러
+  StreamController<double>? _amplitudeController;
+  StreamSubscription<Amplitude>? _amplitudeSubscription;
+
   // 권한 확인
   Future<bool> checkPermission() async {
     final status = await Permission.microphone.request();
@@ -26,6 +33,9 @@ class AudioService {
   bool get isRecording => _isRecording;
   bool get isPaused => _isPaused;
   String? get currentRecordingPath => _currentRecordingPath;
+
+  // 진폭 스트림 노출
+  Stream<double>? get amplitudeStream => _amplitudeController?.stream;
 
   // 저장 경로 생성
   Future<String> _getRecordingPath() async {
@@ -53,6 +63,9 @@ class AudioService {
       _currentRecordingPath = path;
       _isRecording = true;
       _isPaused = false;
+
+      // 진폭 스트림 시작
+      _startAmplitudeStream();
 
       return path;
     } catch (e) {
@@ -93,6 +106,8 @@ class AudioService {
       _isPaused = false;
       _currentRecordingPath = null;
 
+      _stopAmplitudeStream();
+
       return path;
     } catch (e) {
       print('녹음 중지 오류: $e');
@@ -111,9 +126,45 @@ class AudioService {
       _isRecording = false;
       _isPaused = false;
       _currentRecordingPath = null;
+
+      // 진폭 스트림 중지
+      _stopAmplitudeStream();
     } catch (e) {
       print('녹음 취소 오류: $e');
     }
+  }
+
+  // 진폭 스트림 시작
+  void _startAmplitudeStream() {
+    _amplitudeController = StreamController<double>.broadcast();
+
+    _amplitudeSubscription = _audioRecorder
+        .onAmplitudeChanged(const Duration(milliseconds: 100))
+        .listen((amplitude) {
+          double rawAmp = amplitude.current;
+          double normalizedAmp = (rawAmp + 60).clamp(0, 60) / 60;
+
+          double sensitivityExp = 2.5;
+          double curvedAmp = Math.pow(normalizedAmp, sensitivityExp).toDouble();
+
+          _amplitudeController?.add(curvedAmp);
+
+          double scaleValue = 1.0 + (curvedAmp * 3.0);
+
+          sendToUnity(
+            "Cube",
+            "SetScaleFromAmplitude",
+            scaleValue.toStringAsFixed(2),
+          );
+        });
+  }
+
+  // 진폭 스트림 중지
+  void _stopAmplitudeStream() {
+    _amplitudeSubscription?.cancel();
+    _amplitudeController?.close();
+    _amplitudeSubscription = null;
+    _amplitudeController = null;
   }
 
   // 오디오 재생
@@ -137,6 +188,7 @@ class AudioService {
 
   // 리소스 해제
   void dispose() {
+    _stopAmplitudeStream();
     _audioRecorder.dispose();
     _audioPlayer.dispose();
   }

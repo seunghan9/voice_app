@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_embed_unity/flutter_embed_unity.dart';
 import 'dart:async';
 import '../services/audio_service.dart';
 
@@ -183,8 +184,13 @@ class _AudioRecorderWidgetState extends State<AudioRecorderWidget>
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.end,
         children: [
+          Container(
+            width: MediaQuery.of(context).size.width * 0.8,
+            height: 200,
+            child: EmbedUnity(),
+          ),
           const SizedBox(height: 20),
           // 녹음 시간 표시
           Container(

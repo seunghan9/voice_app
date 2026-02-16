@@ -39,6 +39,8 @@ dependencies:
   audioplayers: ^6.0.0
   path_provider: ^2.1.2
   permission_handler: ^11.3.1
+  flutter_embed_unity_6000_0_android: ^1.2.3
+  flutter_embed_unity: ^1.4.0
 
 dev_dependencies:
   flutter_test:

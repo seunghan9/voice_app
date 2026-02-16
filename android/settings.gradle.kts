@@ -1,3 +1,5 @@
+include(":unityLibrary")
+
 pluginManagement {
     val flutterSdkPath =
         run {

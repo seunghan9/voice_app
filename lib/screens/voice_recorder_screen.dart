@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_embed_unity/flutter_embed_unity.dart';
 import '../widgets/audio_recorder_widget.dart';
 import '../widgets/audio_player_widget.dart';
 
@@ -47,16 +48,22 @@ class _VoiceRecorderScreenState extends State<VoiceRecorderScreen> {
         centerTitle: true,
         foregroundColor: Colors.black87,
       ),
-      body: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(20),
-        child: _showPlayer && _recordedAudioPath != null
-            ? AudioPlayerWidget(
-                audioPath: _recordedAudioPath!,
-                onBack: _onBackToRecorder,
-                onDelete: _onDeleteRecording,
-              )
-            : AudioRecorderWidget(onRecordingComplete: _onRecordingComplete),
+      body: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            child: _showPlayer && _recordedAudioPath != null
+                ? AudioPlayerWidget(
+                    audioPath: _recordedAudioPath!,
+                    onBack: _onBackToRecorder,
+                    onDelete: _onDeleteRecording,
+                  )
+                : AudioRecorderWidget(
+                    onRecordingComplete: _onRecordingComplete,
+                  ),
+          ),
+        ],
       ),
     );
   }
